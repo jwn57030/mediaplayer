@@ -162,23 +162,24 @@ MediaPlayer *media_player_new(MpMessageCallback mp_message_callback)
    
    if (!p_media_player)
    {
-      GST_ERROR("Failed to alloc MediaPlayer");    
+      GST_ERROR("Failed to alloc MediaPlayer");
+      return p_media_player;
    }
-   else if (!(p_media_player->p_element = gst_element_factory_make("mediaplayer", NULL)) || 
+
+   if (!(p_media_player->p_element = gst_element_factory_make("mediaplayer", NULL)) ||
             !(p_media_player->media_player_signal_handler_id = 
                  g_signal_connect(p_media_player->p_element, "message-callback",
                                   (GCallback)mediaplayer_message_callback, p_media_player)))
    {
       GST_ERROR("Failed to Initialize MediaPlayer");
       media_player_destroy(p_media_player);
-      p_media_player = NULL;            
+      p_media_player = NULL;
+      return p_media_player;
    }
-   else
-   {
-      p_media_player->mp_message_callback = mp_message_callback;
-   }
-   
-   return p_media_player;
+
+    p_media_player->mp_message_callback = mp_message_callback;
+
+    return p_media_player;
 } 
 
 /**
