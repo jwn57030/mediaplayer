@@ -1,11 +1,9 @@
 #Setup the Media Player Directories needed for includes 
-MEDIA_PLAYER_DIR = $(firstword $(subst /media_player, ,$(CURDIR)))/media_player
+MEDIA_PLAYER_DIR = $(firstword $(subst /mediaplayer, ,$(CURDIR)))/mediaplayer
 include $(MEDIA_PLAYER_DIR)/common.mk
 include $(MEDIA_PLAYER_PLUGIN_DIR)/common.mk
 
 #Define Local Directory Definitions
-MEDIA_PLAYER_BUILD_PLUGIN_DIR=$(MEDIA_PLAYER_BUILD_DIR)/plugins
-
 
 ######################## Builds Flags ##############################
 
