@@ -111,7 +111,7 @@ static void mediaplayer_message_callback(GstElement *p_element, GstMessage *p_me
  */
 void media_player_api_init()
 {
-   g_mutex_lock(&init_mutex);    
+   g_mutex_lock(&init_mutex);
    if (!lib_inited)
    {  
       /* Setup Gstreamer Debug to output errors */
