@@ -1,6 +1,3 @@
-#THINGS TO FIX: 
-#WRITE SCRIPT/set plugin directory so it runs., add main makefile at top level. make sure build stops if it fails, 
-
 #Get the Media Player Directory 
 MEDIA_PLAYER_DIR = $(firstword $(subst /mediaplayer, ,$(CURDIR)))/mediaplayer
 

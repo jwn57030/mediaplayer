@@ -13,13 +13,16 @@
 /***************** Defines ********************************************/
 
 /************************* Structures and Enums ***********************/
+/* Messages Player can Emit */
 typedef enum
 {
-    eMP_EOS
+    eMP_EOS /* End of Stream */
 } MpMessage;
 
 /***************** Types **********************************************/
 typedef struct MediaPlayer MediaPlayer;
+
+/* Definition of callback used for message handling. */
 typedef void (*MpMessageCallback)(MpMessage message);
 
 /***************** Public Functions ***********************************/
