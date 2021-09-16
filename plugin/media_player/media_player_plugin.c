@@ -31,7 +31,6 @@ typedef struct
     GstElement element;
 
     GstElement *p_pipeline;    
-    GThread    *p_msg_thread;
     gboolean    shutdown;
     GstBus     *p_bus;
 } GstMediaPlayer;
@@ -186,28 +185,47 @@ static GstStateChangeReturn gst_mediaplayer_change_state(GstElement *p_element,
                                                          GstStateChange transition)
 {
     GstMediaPlayer       *p_mediaplayer    = (GstMediaPlayer*)p_element;
-    GstStateChangeReturn  retval           = GST_STATE_CHANGE_SUCCESS;
+    GstElement           *p_playbin        = NULL;
+    GThread              *p_msg_thread     = NULL;
+    GstStateChangeReturn  retval           = GST_STATE_CHANGE_FAILURE;
     GstStateChangeReturn  change_state_ret = GST_STATE_CHANGE_SUCCESS; 
 
     switch (transition)
     {
         case GST_STATE_CHANGE_NULL_TO_READY:
         {
-            p_mediaplayer->p_pipeline = gst_parse_launch("playbin uri=https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm",
-                                                          NULL);
+            if (!(p_mediaplayer->p_pipeline = gst_pipeline_new(NULL)))
+            {
+                GST_ERROR("Failed to create pipeline");                
+            }
+            else if (!(p_playbin = gst_element_factory_make("playbin", NULL)) 
+                     || !gst_bin_add((GstBin*)(p_mediaplayer->p_pipeline), p_playbin))
+            { 
+                GST_ERROR("Failed to create playbin");
+                gst_object_unref(p_mediaplayer->p_pipeline);
+                gst_object_unref(p_playbin);
+                p_playbin = NULL;
+                p_mediaplayer->p_pipeline = NULL;
+            }
+            else
+            {
+                g_object_set(p_playbin, "uri",
+                            "https://www.freedesktop.org/software/gstreamer-sdk/data/media/sintel_trailer-480p.webm", NULL);
+               
+                p_mediaplayer->p_bus = gst_element_get_bus(p_mediaplayer->p_pipeline);
+                gst_element_set_bus(p_element, p_mediaplayer->p_bus);
+                
+                /* Create Message handling thread */
+                p_msg_thread = g_thread_new(NULL, gst_mediaplayer_message_handler, p_mediaplayer);            
 
-            p_mediaplayer->p_bus = gst_element_get_bus(p_mediaplayer->p_pipeline);
-            gst_element_set_bus(p_element, p_mediaplayer->p_bus);
+                /* Unreffing thread here as we will not be doing a join later. This allows shutdown
+                   to be quicker as we don't need to wait for thread join to exit. */
+                g_thread_unref(p_msg_thread);
+                p_msg_thread = NULL;
 
-            /* Create Message handling thread */
-            p_mediaplayer->p_msg_thread = g_thread_new(NULL, gst_mediaplayer_message_handler, p_mediaplayer);            
+                retval = gst_element_set_state(p_mediaplayer->p_pipeline, GST_STATE_READY);
+            }
 
-            /* Unreffing thread here as we will not be doing a join later. This allows shutdown
-               to be quicker as we don't need to wait for thread join to exit. */
-            g_thread_unref(p_mediaplayer->p_msg_thread);
-            p_mediaplayer->p_msg_thread = NULL;
-
-            retval = gst_element_set_state(p_mediaplayer->p_pipeline, GST_STATE_READY);
             break;
         } 
 
